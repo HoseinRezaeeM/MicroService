@@ -4,6 +4,7 @@ import com.example.bookcatalogservice.domain.Book;
 import com.example.bookcatalogservice.domain.CatalogItem;
 import com.example.bookcatalogservice.domain.Rating;
 import com.example.bookcatalogservice.domain.UserRatings;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +24,7 @@ public class BookCatalogController {
 
 
     @GetMapping("/{userId}")
+    @HystrixCommand(fallbackMethod = "getCatalogsItemFallback")
     public List<CatalogItem> getCatalogsItem(@PathVariable("userId") String userId) {
 
         UserRatings template = restTemplate.getForObject("https://book-rating-service/rating/user/1", UserRatings.class);
@@ -34,7 +36,13 @@ public class BookCatalogController {
 
         return template.getUserRatings().stream().map(rating -> {
             Book book = restTemplate.getForObject("http://book-info-service/bookinfo/1", Book.class);
-            return new CatalogItem(book.getName(), "list ", 5);
+            return new CatalogItem(book.getName(), "listk ", 5);
         }).collect(Collectors.toList());
+    }
+
+    public List<CatalogItem> getCatalogsItemFallback(@PathVariable String userId){
+        return Arrays.asList( new CatalogItem(
+                "book" , " good ", 5
+        ));
     }
 }
